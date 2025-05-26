@@ -1,0 +1,11 @@
+*.out
+out
+*.exe
+.*
+*.o
+*/**/*.o
+build/
+
+*~
+
+!.gitignore
