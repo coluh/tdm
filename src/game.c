@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <raylib.h>
 #include <rcamera.h>
+#include <raymath.h>
 
 Game g;
 
@@ -41,11 +42,20 @@ static void update() {
 static void draw(float alpha) {
 	ClearBackground(RAYWHITE);
 
-	// const World *w = g.world;
+	const World *w = g.world;
 
 	// 3D content
 	BeginMode3D(g.me->camera);
-	DrawPlane((Vector3){0, 0, 0}, (Vector2){20, 20}, LIGHTGRAY);
+	DrawPlane((Vector3){0, -0.01, 0}, (Vector2){50, 50}, LIGHTGRAY);
+	for (int i = 0; i < w->box_count; i++) {
+		const BoundingBox *box = &w->boxes[i];
+		Vector3 position = Vector3Lerp(box->min, box->max, 0.5f);
+		Vector3 size = Vector3Subtract(box->max, box->min);
+		DrawCubeV(position, size, GRAY);
+	}
+	for (int i = 0; i < w->ball_count; i++) {
+		DrawSphere(w->balls[i].center, w->balls[i].radius, GRAY);
+	}
 
 	for (int i = 0; i < g.max_players; i++) {
 		const Player *p = &g.players[i];
