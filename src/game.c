@@ -75,11 +75,10 @@ static void draw(float alpha) {
 	for (int i = 0; i < g.max_players; i++) {
 		const Player *p = &g.players[i];
 		Vector3 v = Vector3Lerp(p->previous_position, p->position, alpha); // bottom center
-		float width = 0.5f, height = 1.4f;
-		v.y += height/2;
-		DrawCubeWires(v, width, height, width, p->team == 1 ? RED : BLUE);
-		v.y += height/2 + 0.3f;
-		DrawSphereWires(v, 0.25f, 10, 10, p->team == 1 ? RED : BLUE);
+		v.y += PLAYER_BODY_HEIGHT/2;
+		DrawCubeWires(v, PLAYER_BODY_WIDTH, PLAYER_BODY_HEIGHT, PLAYER_BODY_WIDTH, p->team == 1 ? RED : BLUE);
+		v.y += PLAYER_HEAD_OFFSET;
+		DrawSphereWires(v, PLAYER_HEAD_RADIUS, 10, 10, p->team == 1 ? RED : BLUE);
 	}
 	EndMode3D();
 

@@ -2,7 +2,6 @@
 #define _TDM_game_h
 
 #include <stdbool.h>
-#include <raylib.h>
 
 typedef struct World World;
 typedef struct Player Player;

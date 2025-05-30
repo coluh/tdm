@@ -3,6 +3,9 @@
 #include <raymath.h>
 #include <rcamera.h>
 #include <string.h>
+#include "game.h"
+
+extern Game g;
 
 void player_init(Player *p) {
 	if (p->id == 0 || p->team == 0) {
@@ -22,9 +25,15 @@ void player_init(Player *p) {
 }
 
 static void move_slide(Player *p) {
-	p->position.x += p->velocity.x * 0.05f;
-	p->position.y += p->velocity.y * 0.05f;
-	p->position.z += p->velocity.z * 0.05f;
+	p->velocity.y += -30 * g.delta;
+
+	p->position.x += p->velocity.x * g.delta;
+	p->position.y += p->velocity.y * g.delta;
+	p->position.z += p->velocity.z * g.delta;
+	if (p->position.y < 0.01) {
+		p->position.y = 0.01;
+		p->velocity.y = 0;
+	}
 }
 
 void player_update(Player *p) {
@@ -42,7 +51,8 @@ void player_update(Player *p) {
 	Vector3 v = Vector3Add(right, forward);
 	v = Vector3Normalize(v);
 	v = Vector3Scale(v, 5.0f); // TODO: depends on player state
-	p->velocity = v;
+	p->velocity.x = v.x;
+	p->velocity.z = v.z;
 	if (p->input.jump) {
 		p->velocity.y = 10.0f;
 	}
@@ -56,7 +66,7 @@ void player_updateCameara(Player *player, Vector3 position) {
 	Camera *cam = &player->camera;
 
 	Vector3 p = position;
-	Vector3 eye_offset = {0, 1.7f, 0};
+	Vector3 eye_offset = {0, PLAYER_BODY_HEIGHT/2 + PLAYER_HEAD_OFFSET, 0};
 	Vector3 forward = GetCameraForward(cam);
 	Vector3 right = GetCameraRight(cam);
 	Vector3 up = GetCameraUp(cam);
