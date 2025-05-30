@@ -7,8 +7,18 @@
 typedef struct Player {
 	int id;
 	int team;
-	Camera camera; // also eye position
+	Vector3 position; // bottom center
+	Vector3 velocity;
+	Vector3 previous_position; // for render alpha
 	float health;
+
+	struct PlayerInput {
+		int forward, back, left, right;
+		bool jump, crouch, lie;
+		bool scope, peekl, peekr;
+		bool fire;
+	} input;
+	Camera camera;
 
 	struct {
 		Weapon left;
@@ -28,5 +38,7 @@ typedef struct Player {
 
 void player_init(Player *player);
 void player_update(Player *player);
+
+void player_updateCameara(Player *p, Vector3 position);
 
 #endif

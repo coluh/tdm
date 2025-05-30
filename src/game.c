@@ -22,14 +22,14 @@ static void input() {
 	CameraYaw(&p->camera, -mouseDelta.x*da, false);
 	CameraPitch(&p->camera, -mouseDelta.y*da, true, false, false);
 
-	const float move_speed = 5.0f; // TODO: rely on player state
-	const float ds = move_speed*GetFrameTime();
-        if (IsKeyDown(KEY_W)) CameraMoveForward(&p->camera, ds, true);
-        if (IsKeyDown(KEY_A)) CameraMoveRight(&p->camera, -ds, true);
-        if (IsKeyDown(KEY_S)) CameraMoveForward(&p->camera, -ds, true);
-        if (IsKeyDown(KEY_D)) CameraMoveRight(&p->camera, ds, true);
-	if (IsKeyDown(KEY_SPACE)) CameraMoveUp(&p->camera, ds);
-	if (IsKeyDown(KEY_LEFT_SHIFT)) CameraMoveUp(&p->camera, -ds);
+	// TODO: config keydown and hold
+        if (IsKeyDown(KEY_W)) p->input.forward = 1;
+        if (IsKeyDown(KEY_S)) p->input.back = 1;
+        if (IsKeyDown(KEY_A)) p->input.left = 1;
+        if (IsKeyDown(KEY_D)) p->input.right = 1;
+	if (IsKeyPressed(KEY_SPACE)) p->input.jump = 1;
+	if (IsKeyPressed(KEY_LEFT_SHIFT)) p->input.crouch = 1;
+	if (IsKeyPressed(KEY_LEFT_CONTROL)) p->input.lie = 1;
 }
 
 static void update() {
@@ -53,6 +53,7 @@ static void draw(float alpha) {
 	const World *w = g.world;
 
 	// 3D content
+	player_updateCameara(g.me, Vector3Lerp(g.me->previous_position, g.me->position, alpha));
 	BeginMode3D(g.me->camera);
 	DrawPlane((Vector3){0, -0.01, 0}, (Vector2){50, 50}, ColorFromHSV(200, 0.7f, 0.7f));
 
@@ -73,14 +74,12 @@ static void draw(float alpha) {
 	// players
 	for (int i = 0; i < g.max_players; i++) {
 		const Player *p = &g.players[i];
-		if (p == g.me) {
-			continue;
-		}
-		Vector3 eye = p->camera.position;
-		DrawSphereWires(eye, 0.25f, 10, 10, p->team == 1 ? RED : BLUE);
-		eye.y -= 0.3f;
-		eye.y -= 0.7f;
-		DrawCubeWires(eye, 0.5f, 1.4f, 0.5f, p->team == 1 ? RED : BLUE);
+		Vector3 v = Vector3Lerp(p->previous_position, p->position, alpha); // bottom center
+		float width = 0.5f, height = 1.4f;
+		v.y += height/2;
+		DrawCubeWires(v, width, height, width, p->team == 1 ? RED : BLUE);
+		v.y += height/2 + 0.3f;
+		DrawSphereWires(v, 0.25f, 10, 10, p->team == 1 ? RED : BLUE);
 	}
 	EndMode3D();
 
