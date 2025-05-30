@@ -7,7 +7,7 @@
 typedef struct Player {
 	int id;
 	int team;
-	Camera camera; // also contains eye position
+	Camera camera; // also eye position
 	float health;
 
 	struct {

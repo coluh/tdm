@@ -1,7 +1,9 @@
 #include "game.h"
 #include "config.h"
+#include "utils.h"
 #include "world.h"
 #include "player.h"
+#include <math.h>
 #include <stdlib.h>
 #include <raylib.h>
 #include <rcamera.h>
@@ -39,6 +41,12 @@ static void update() {
 	}
 }
 
+static float hashV(Vector3 v) {
+	float dot = v.x * 127.1 + v.y * 311.7 + v.z * 74.7;
+	dot = sinf(dot) * 43758.5453;
+	return dot - floorf(dot);
+}
+
 static void draw(float alpha) {
 	ClearBackground(RAYWHITE);
 
@@ -46,17 +54,23 @@ static void draw(float alpha) {
 
 	// 3D content
 	BeginMode3D(g.me->camera);
-	DrawPlane((Vector3){0, -0.01, 0}, (Vector2){50, 50}, LIGHTGRAY);
+	DrawPlane((Vector3){0, -0.01, 0}, (Vector2){50, 50}, ColorFromHSV(200, 0.7f, 0.7f));
+
+	// world boxes, ramps, balls
 	for (int i = 0; i < w->box_count; i++) {
 		const BoundingBox *box = &w->boxes[i];
 		Vector3 position = Vector3Lerp(box->min, box->max, 0.5f);
 		Vector3 size = Vector3Subtract(box->max, box->min);
-		DrawCubeV(position, size, GRAY);
+		DrawCubeV(position, size, ColorFromHSV(360*hashV(position), 0.7f, 0.7f));
+	}
+	for (int i = 0; i < w->ramp_count; i++) {
+		DrawRamp(&w->ramps[i], ColorFromHSV(360*hashV(w->ramps[i].max), 0.7f, 0.7f));
 	}
 	for (int i = 0; i < w->ball_count; i++) {
-		DrawSphere(w->balls[i].center, w->balls[i].radius, GRAY);
+		DrawSphere(w->balls[i].center, w->balls[i].radius, ColorFromHSV(360*hashV(w->balls[i].center), 0.7f, 0.7f));
 	}
 
+	// players
 	for (int i = 0; i < g.max_players; i++) {
 		const Player *p = &g.players[i];
 		if (p == g.me) {
