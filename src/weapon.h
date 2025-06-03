@@ -48,19 +48,23 @@ typedef enum StockType {
 typedef enum WeaponType {
 	Weapon_EMPTY,
 
-	Weapon_SCARL,
-	Weapon_M16A4,
-	Weapon_GROZA,
+	// Assault Rifles
+	// 突击步枪
+	Weapon_ACE32,
 	Weapon_AKM,
 	Weapon_AUG,
+	Weapon_G36C,
+	Weapon_GROZA,
+	Weapon_K2,
+	Weapon_M16A4,
 	Weapon_M416,
-	Weapon_QBZ,
 	Weapon_M762,
 	Weapon_MK47,
-	Weapon_G36C,
-	Weapon_K2,
-	Weapon_ACE32,
+	Weapon_QBZ,
+	Weapon_SCARL,
 
+	// Designated Marksman Rifles
+	// 射手步枪
 	Weapon_SKS,
 	Weapon_MK14,
 	Weapon_MINI14,
@@ -70,6 +74,8 @@ typedef enum WeaponType {
 	Weapon_MK12,
 	Weapon_DRAGUNOV,
 
+	// Submachine Guns
+	// 冲锋枪
 	Weapon_MICROUZI,
 	Weapon_UMP45,
 	Weapon_TOMMYGUN,
@@ -78,6 +84,8 @@ typedef enum WeaponType {
 	Weapon_MP5K,
 	Weapon_P90,
 
+	// Sniper Rifles
+	// 狙击步枪
 	Weapon_AWM,
 	Weapon_M24,
 	Weapon_KAR98K,
@@ -85,10 +93,14 @@ typedef enum WeaponType {
 	Weapon_MOSINNAGANT,
 	Weapon_LYNXAMR,
 
+	// Light Machine Guns
+	// 轻机枪
 	Weapon_DP28,
 	Weapon_M249,
 	Weapon_MG3,
 
+	// Shotguns
+	// 霰弹枪
 	Weapon_S1897,
 	Weapon_S686,
 	Weapon_S12K,
@@ -96,17 +108,19 @@ typedef enum WeaponType {
 	Weapon_DBS,
 	Weapon_O12,
 
+	// CrossBow
 	Weapon_CROSSBOW,
 
+	// Pistols
+	// 手枪
+	Weapon_DEAGLE,
+	Weapon_FLARE,
+	Weapon_P18C,
 	Weapon_P1911,
 	Weapon_P92,
-	Weapon_9MM,
 	Weapon_R1895,
-	Weapon_P18C,
 	Weapon_R45,
-	Weapon_FLARE,
 	Weapon_SKORPION,
-	Weapon_DEAGLE,
 } WeaponType;
 
 // weapon in player's weapon slot
@@ -125,5 +139,7 @@ typedef struct Weapon {
 } Weapon;
 
 void init_weapons();
+
+const char *weapon_name(WeaponType type);
 
 #endif

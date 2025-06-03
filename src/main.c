@@ -12,6 +12,9 @@ int main() {
 	config_load(NULL);
 
 	InitWindow(1000, 700, "Team Deathmatch");
+	SetWindowState(FLAG_WINDOW_RESIZABLE);
+	SetWindowState(FLAG_WINDOW_UNDECORATED);
+	MaximizeWindow();
 	SetTargetFPS(60);
 
 	game_loop(0, 8);

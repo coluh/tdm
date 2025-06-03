@@ -5,6 +5,7 @@
 #include <string.h>
 #include "game.h"
 #include "types.h"
+#include "weapon.h"
 
 extern Game g;
 
@@ -23,6 +24,13 @@ void player_init(Player *p) {
 	p->camera.projection = CAMERA_PERSPECTIVE;
 	player_updateCameara(p, p->position);
 	p->camera.target = (Vector3) {0.0f, 2.0f, 0.0f};
+
+	p->health = PLAYER_FULL_HEALTH;
+	p->weapons.left.base = Weapon_M762;
+	p->weapons.hand.base = Weapon_DEAGLE;
+	p->holding = &p->weapons.left;
+	p->has_frag_grenade = true;
+	p->has_stun_grenade = true;
 }
 
 static void move_slide(Player *p) {

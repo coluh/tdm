@@ -16,15 +16,14 @@
 // player head radius
 #define PLAYER_HEAD_RADIUS 0.25f
 
+#define PLAYER_FULL_HEALTH 10.0f
+
 typedef struct Player {
 	int id;
 	int team;
 	Vector3 position; // bottom center
 	Vector3 velocity;
 	Vector3 previous_position; // for render alpha
-	float health;
-	bool crouching;
-	bool lying;
 
 	struct PlayerInput {
 		int forward, back, left, right;
@@ -34,6 +33,9 @@ typedef struct Player {
 	} input;
 	Camera camera;
 
+	float health;
+	bool crouching;
+	bool lying;
 	struct {
 		Weapon left;
 		Weapon right;

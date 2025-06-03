@@ -1,9 +1,11 @@
 #include "game.h"
 #include "config.h"
 #include "utils.h"
+#include "weapon.h"
 #include "world.h"
 #include "player.h"
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <raylib.h>
 #include <rcamera.h>
@@ -14,6 +16,22 @@ Game g;
 static void input() {
 	if (WindowShouldClose()) {
 		g.running = false;
+		return;
+	}
+	if (IsKeyPressed(KEY_F11)) {
+		if (!IsWindowMaximized()) {
+			SetWindowState(FLAG_WINDOW_UNDECORATED);
+			MaximizeWindow();
+		} else {
+			ClearWindowState(FLAG_WINDOW_UNDECORATED);
+			RestoreWindow();
+		}
+	}
+	if (IsWindowResized()) {
+		// const int w = GetScreenWidth();
+		const int h = GetScreenHeight();
+		g.zoom = floorf(h/500.0f + 0.5f)/2.0f;
+		return;
 	}
 
 	Player * const p = g.me;
@@ -53,7 +71,7 @@ static float hashV(Vector3 v) {
 static void draw(float alpha) {
 	ClearBackground(RAYWHITE);
 
-	const World *w = g.world;
+	const World *world = g.world;
 
 	// 3D content
 	player_updateCameara(g.me, Vector3Lerp(g.me->previous_position, g.me->position, alpha));
@@ -61,17 +79,17 @@ static void draw(float alpha) {
 	DrawPlane((Vector3){0, -0.01, 0}, (Vector2){50, 50}, ColorFromHSV(200, 0.7f, 0.7f));
 
 	// world boxes, ramps, balls
-	for (int i = 0; i < w->box_count; i++) {
-		const BoundingBox *box = &w->boxes[i];
+	for (int i = 0; i < world->box_count; i++) {
+		const BoundingBox *box = &world->boxes[i];
 		Vector3 position = Vector3Lerp(box->min, box->max, 0.5f);
 		Vector3 size = Vector3Subtract(box->max, box->min);
 		DrawCubeV(position, size, ColorFromHSV(360*hashV(position), 0.7f, 0.7f));
 	}
-	for (int i = 0; i < w->ramp_count; i++) {
-		DrawRamp(&w->ramps[i], ColorFromHSV(360*hashV(w->ramps[i].max), 0.7f, 0.7f));
+	for (int i = 0; i < world->ramp_count; i++) {
+		DrawRamp(&world->ramps[i], ColorFromHSV(360*hashV(world->ramps[i].max), 0.7f, 0.7f));
 	}
-	for (int i = 0; i < w->ball_count; i++) {
-		DrawSphere(w->balls[i].center, w->balls[i].radius, ColorFromHSV(360*hashV(w->balls[i].center), 0.7f, 0.7f));
+	for (int i = 0; i < world->ball_count; i++) {
+		DrawSphere(world->balls[i].center, world->balls[i].radius, ColorFromHSV(360*hashV(world->balls[i].center), 0.7f, 0.7f));
 	}
 
 	// players
@@ -79,17 +97,49 @@ static void draw(float alpha) {
 		const Player *p = &g.players[i];
 		Vector3 v = Vector3Lerp(p->previous_position, p->position, alpha); // bottom center
 		v.y += PLAYER_BODY_HEIGHT/2;
-		DrawCubeWires(v, PLAYER_BODY_WIDTH, PLAYER_BODY_HEIGHT, PLAYER_BODY_WIDTH, p->team == 1 ? RED : BLUE);
+		DrawCube(v, PLAYER_BODY_WIDTH, PLAYER_BODY_HEIGHT, PLAYER_BODY_WIDTH, p->team == 1 ? PINK : SKYBLUE);
 		v.y += PLAYER_HEAD_OFFSET;
 		DrawSphereWires(v, PLAYER_HEAD_RADIUS, 10, 10, p->team == 1 ? RED : BLUE);
 	}
 	EndMode3D();
 
 	// 2D content
-	const int hw = GetScreenWidth() / 2;
-	const int hh = GetScreenHeight() / 2;
-	DrawLine(hw - 5, hh, hw + 5, hh, WHITE);
-	DrawLine(hw, hh - 5, hw, hh + 5, WHITE);
+	const float zm = g.zoom;
+
+	const int window_width = GetScreenWidth();
+	const int window_height = GetScreenHeight();
+	DrawLine(window_width/2.0f - 8*zm, window_height/2.0f, window_width/2.0f + 8*zm, window_height/2.0f, WHITE);
+	DrawLine(window_width/2.0f, window_height/2.0f - 8*zm, window_width/2.0f, window_height/2.0f + 8*zm, WHITE);
+
+	// weapons
+	DrawRectangle(0, 0, 300*zm, 100*zm, GetColor(0xffffff7f));
+	DrawRectangle(4*zm, 2*zm, 292*zm, 96*zm, GetColor(0x0000007f));
+	DrawText(weapon_name(g.me->weapons.left.base), 9*zm, 7*zm, 24*g.zoom, WHITE);
+	DrawRectangle(0, 100*zm, 300*zm, 100*zm, GetColor(0xffffff7f));
+	DrawRectangle(4*zm, 102*zm, 292*zm, 96*zm, GetColor(0x0000007f));
+	DrawText(weapon_name(g.me->weapons.right.base), 9*zm, 107*zm, 24*g.zoom, WHITE);
+	DrawRectangle(0, 200*zm, 200*zm, 100*zm, GetColor(0xffffff7f));
+	DrawRectangle(4*zm, 202*zm, 192*zm, 96*zm, GetColor(0x0000007f));
+	DrawText(weapon_name(g.me->weapons.hand.base), 9*zm, 207*zm, 24*g.zoom, WHITE);
+
+	// health
+	float x = 20*zm;
+	float y = window_height - 20*zm;
+	y -= 40*zm;
+	float w = 500*zm;
+	float h = 40*zm;
+	DrawRectangle(x, y, w, h, GetColor(0x0000007f));
+	DrawRectangleLines(x, y, w, h, WHITE);
+	float t = 2*zm;
+	DrawRectangle(x + 2*t, y + 2*t, (w - 4*t)*g.me->health/PLAYER_FULL_HEALTH, h - 4*t, WHITE);
+
+	// record
+	y -= 20*zm + 24*zm;
+	x += 8*zm;
+	DrawRectangleGradientH(x - 8*zm, y - 6*zm, 200*zm, 36*zm, GetColor(0x0000007f), BLANK);
+	char buf[16];
+	snprintf(buf, 16, "%d / %d / %d", g.me->record.kill, g.me->record.death, g.me->record.assist);
+	DrawText(buf, x, y, 24*g.zoom, WHITE);
 }
 
 void game_loop(int world_index, int max_players) {
@@ -118,6 +168,7 @@ void game_loop(int world_index, int max_players) {
 	double accumulator = 0;
 	g.running = true;
 	g.delta = 0.05;
+	g.zoom = 1;
 
 	while (g.running) {
 
