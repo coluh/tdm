@@ -4,6 +4,7 @@
 #include <rcamera.h>
 #include <string.h>
 #include "game.h"
+#include "types.h"
 
 extern Game g;
 
@@ -36,6 +37,51 @@ static void move_slide(Player *p) {
 	}
 }
 
+void player_getBody(Player *p, BoundingBall *head, BoundingBox *body) {
+	head->center = (Vector3){
+		p->position.x,
+		p->position.y + PLAYER_BODY_HEIGHT/2 + PLAYER_HEAD_OFFSET,
+		p->position.z,
+	};
+	head->radius = PLAYER_HEAD_RADIUS;
+	body->min = (Vector3){
+		p->position.x - PLAYER_BODY_WIDTH/2,
+		p->position.y,
+		p->position.z - PLAYER_BODY_WIDTH/2,
+	};
+	body->max = (Vector3){
+		p->position.x + PLAYER_BODY_WIDTH/2,
+		p->position.y + PLAYER_BODY_HEIGHT,
+		p->position.z + PLAYER_BODY_WIDTH/2,
+	};
+}
+
+void player_fire(Player *self) {
+	Vector3 dir = Vector3Subtract(self->camera.target, self->camera.position);
+	dir = Vector3Normalize(dir);
+	Ray bullet = {
+		self->camera.position,
+		dir,
+	};
+
+	// RayCollision nearest_collide;
+	// Deleted! because I want more birds in one row!
+	for (int i = 0; i < g.max_players; i++) {
+		Player *p = &g.players[i];
+		if (p->id == 0) continue; // player not exists
+		if (p->team != self->team) {
+			BoundingBall head;
+			BoundingBox body;
+			player_getBody(p, &head, &body);
+			RayCollision info_head = GetRayCollisionSphere(bullet, head.center, head.radius);
+			RayCollision info_body = GetRayCollisionBox(bullet, body);
+			if (info_head.hit || info_body.hit) {
+				TraceLog(LOG_INFO, "player %d shoot player %d!", self->id, p->id);
+			}
+		}
+	}
+}
+
 void player_update(Player *p) {
 	p->previous_position = p->position;
 
@@ -55,6 +101,9 @@ void player_update(Player *p) {
 	p->velocity.z = v.z;
 	if (p->input.jump) {
 		p->velocity.y = 10.0f;
+	}
+	if (p->input.fire) {
+		player_fire(p);
 	}
 
 	move_slide(p);

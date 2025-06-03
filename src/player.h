@@ -2,6 +2,7 @@
 #define _TDM_player_h
 
 #include <raylib.h>
+#include "types.h"
 #include "weapon.h"
 
 // player body width
@@ -28,7 +29,7 @@ typedef struct Player {
 	struct PlayerInput {
 		int forward, back, left, right;
 		bool jump, crouch, lie;
-		bool scope, peekl, peekr;
+		bool scope/*, peekl, peekr*/;
 		bool fire;
 	} input;
 	Camera camera;
@@ -53,5 +54,6 @@ void player_init(Player *player);
 void player_update(Player *player);
 
 void player_updateCameara(Player *p, Vector3 position);
+void player_getBody(Player *p, BoundingBall *head, BoundingBox *body);
 
 #endif

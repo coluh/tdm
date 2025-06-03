@@ -27,9 +27,12 @@ static void input() {
         if (IsKeyDown(KEY_S)) p->input.back = 1;
         if (IsKeyDown(KEY_A)) p->input.left = 1;
         if (IsKeyDown(KEY_D)) p->input.right = 1;
-	if (IsKeyPressed(KEY_SPACE)) p->input.jump = 1;
-	if (IsKeyPressed(KEY_LEFT_SHIFT)) p->input.crouch = 1;
-	if (IsKeyPressed(KEY_LEFT_CONTROL)) p->input.lie = 1;
+
+	if (IsKeyPressed(KEY_SPACE)) p->input.jump = true;
+	if (IsKeyPressed(KEY_LEFT_SHIFT)) p->input.crouch = true;
+	if (IsKeyPressed(KEY_LEFT_CONTROL)) p->input.lie = true;
+	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) p->input.fire = true;
+	if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) p->input.scope = true;
 }
 
 static void update() {
