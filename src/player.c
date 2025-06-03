@@ -6,6 +6,7 @@
 #include "game.h"
 #include "types.h"
 #include "weapon.h"
+#include "event.h"
 
 extern Game g;
 
@@ -85,6 +86,13 @@ void player_fire(Player *self) {
 			RayCollision info_body = GetRayCollisionBox(bullet, body);
 			if (info_head.hit || info_body.hit) {
 				TraceLog(LOG_INFO, "player %d shoot player %d!", self->id, p->id);
+				p->health -= 4.0f;
+				if (p->health <= 0) {
+					event_dispatch(&(Event){
+						.type = Event_KILL,
+						.kill = { self->id, p->id },
+					});
+				}
 			}
 		}
 	}

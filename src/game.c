@@ -34,6 +34,19 @@ static void input() {
 		return;
 	}
 
+	if (IsKeyPressed(KEY_E)) {
+		if (!g.unfocus) {
+			g.unfocus = true;
+			EnableCursor();
+		} else {
+			g.unfocus = false;
+			DisableCursor();
+		}
+	}
+	if (g.unfocus) {
+		return;
+	}
+
 	Player * const p = g.me;
 	const float da = config_get()->sensitivity.normal*GetFrameTime();
 	const Vector2 mouseDelta = GetMouseDelta();
@@ -112,14 +125,14 @@ static void draw(float alpha) {
 	DrawLine(window_width/2.0f, window_height/2.0f - 8*zm, window_width/2.0f, window_height/2.0f + 8*zm, WHITE);
 
 	// weapons
-	DrawRectangle(0, 0, 300*zm, 100*zm, GetColor(0xffffff7f));
-	DrawRectangle(4*zm, 2*zm, 292*zm, 96*zm, GetColor(0x0000007f));
+	DrawRectangle(0, 0, 300*zm, 100*zm, GetColor(0xffffff2f));
+	DrawRectangle(4*zm, 2*zm, 292*zm, 96*zm, GetColor(0x000000af));
 	DrawText(weapon_name(g.me->weapons.left.base), 9*zm, 7*zm, 24*g.zoom, WHITE);
-	DrawRectangle(0, 100*zm, 300*zm, 100*zm, GetColor(0xffffff7f));
-	DrawRectangle(4*zm, 102*zm, 292*zm, 96*zm, GetColor(0x0000007f));
+	DrawRectangle(0, 100*zm, 300*zm, 100*zm, GetColor(0xffffff2f));
+	DrawRectangle(4*zm, 102*zm, 292*zm, 96*zm, GetColor(0x000000af));
 	DrawText(weapon_name(g.me->weapons.right.base), 9*zm, 107*zm, 24*g.zoom, WHITE);
-	DrawRectangle(0, 200*zm, 200*zm, 100*zm, GetColor(0xffffff7f));
-	DrawRectangle(4*zm, 202*zm, 192*zm, 96*zm, GetColor(0x0000007f));
+	DrawRectangle(0, 200*zm, 200*zm, 100*zm, GetColor(0xffffff2f));
+	DrawRectangle(4*zm, 202*zm, 192*zm, 96*zm, GetColor(0x000000af));
 	DrawText(weapon_name(g.me->weapons.hand.base), 9*zm, 207*zm, 24*g.zoom, WHITE);
 
 	// health
@@ -128,7 +141,7 @@ static void draw(float alpha) {
 	y -= 40*zm;
 	float w = 500*zm;
 	float h = 40*zm;
-	DrawRectangle(x, y, w, h, GetColor(0x0000007f));
+	DrawRectangle(x, y, w, h, GetColor(0x000000af));
 	DrawRectangleLines(x, y, w, h, WHITE);
 	float t = 2*zm;
 	DrawRectangle(x + 2*t, y + 2*t, (w - 4*t)*g.me->health/PLAYER_FULL_HEALTH, h - 4*t, WHITE);
@@ -136,7 +149,7 @@ static void draw(float alpha) {
 	// record
 	y -= 20*zm + 24*zm;
 	x += 8*zm;
-	DrawRectangleGradientH(x - 8*zm, y - 6*zm, 200*zm, 36*zm, GetColor(0x0000007f), BLANK);
+	DrawRectangleGradientH(x - 8*zm, y - 6*zm, 200*zm, 36*zm, GetColor(0x000000af), BLANK);
 	char buf[16];
 	snprintf(buf, 16, "%d / %d / %d", g.me->record.kill, g.me->record.death, g.me->record.assist);
 	DrawText(buf, x, y, 24*g.zoom, WHITE);
@@ -162,7 +175,6 @@ void game_loop(int world_index, int max_players) {
 		g.players[i].team = i < (max_players+1)/2 ? 1 : 2;
 		player_init(&g.players[i]);
 	}
-	// player_init(&g.players[g.me]);
 
 	DisableCursor();
 	double accumulator = 0;
@@ -193,4 +205,8 @@ void game_loop(int world_index, int max_players) {
 	}
 
 	EnableCursor();
+}
+
+Player *getPlayer(int id) {
+	return &g.players[id - 1]; // TODO: improve this
 }

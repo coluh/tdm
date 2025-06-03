@@ -4,7 +4,7 @@
 static Config current;
 
 void config_load(const char *path) {
-	if (path == NULL) {
+	if (path == NULL) { // default configs
 		current.sensitivity.normal = 0.1f;
 	}
 }

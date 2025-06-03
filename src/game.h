@@ -17,9 +17,13 @@ typedef struct Game {
 	bool running;
 	double delta; // fixed timestep for updating
 	float zoom;
+
+	bool unfocus; // press to unfocus
 } Game;
 
 // start a game round
 void game_loop(int world_index, int max_players);
+
+Player *getPlayer(int id);
 
 #endif
