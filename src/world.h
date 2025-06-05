@@ -15,5 +15,6 @@ typedef struct World {
 } World;
 
 World *world_ofDebug();
+bool world_overlapPoint(const World *w, Vector3 v);
 
 #endif

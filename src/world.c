@@ -1,5 +1,7 @@
 #include "world.h"
 #include <raylib.h>
+#include <raymath.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include "types.h"
@@ -40,4 +42,25 @@ World *world_ofDebug() {
 	w->balls[1] = (BoundingBall){{1, 0.5, 1}, 0.5};
 
 	return w;
+}
+
+bool world_overlapPoint(const World *w, Vector3 v) {
+	for (int i = 0; i < w->box_count; i++) {
+		const BoundingBox *box = &w->boxes[i];
+		if (v.x >= box->min.x && v.x < box->max.x &&
+				v.y >= box->min.y && v.y < box->max.y &&
+				v.z >= box->min.z && v.z < box->max.z) {
+			return true;
+		}
+	}
+	for (int i = 0; i < w->ramp_count; i++) {
+		;
+	}
+	for (int i = 0; i < w->ball_count; i++) {
+		const BoundingBall *ball = &w->balls[i];
+		if (Vector3DistanceSqr(v, ball->center) <= ball->radius*ball->radius) {
+			return true;
+		}
+	}
+	return false;
 }

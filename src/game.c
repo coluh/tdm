@@ -50,8 +50,9 @@ static void input() {
 	Player * const p = g.me;
 	const float da = config_get()->sensitivity.normal*GetFrameTime();
 	const Vector2 mouseDelta = GetMouseDelta();
-	CameraYaw(&p->camera, -mouseDelta.x*da, false);
-	CameraPitch(&p->camera, -mouseDelta.y*da, true, false, false);
+	p->rotation.yaw += mouseDelta.x*da;
+	p->rotation.pitch -= mouseDelta.y*da;
+	p->rotation.pitch = Wrap(p->rotation.pitch, -89.0f, +89.0f);
 
 	// TODO: config keydown and hold
         if (IsKeyDown(KEY_W)) p->input.forward = 1;
@@ -64,6 +65,10 @@ static void input() {
 	if (IsKeyPressed(KEY_LEFT_CONTROL)) p->input.lie = true;
 	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) p->input.fire = true;
 	if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) p->input.scope = true;
+
+	if (IsKeyPressed(KEY_ONE)) p->holding = &p->weapons.left;
+	if (IsKeyPressed(KEY_TWO)) p->holding = &p->weapons.right;
+	if (IsKeyPressed(KEY_THREE)) p->holding = &p->weapons.hand;
 }
 
 static void update() {
@@ -71,7 +76,7 @@ static void update() {
 		if (g.players[i].id == 0) {
 			continue;
 		}
-		player_update(&g.players[i]);
+		player_update(&g.players[i], g.world);
 	}
 }
 
@@ -87,7 +92,7 @@ static void draw(float alpha) {
 	const World *world = g.world;
 
 	// 3D content
-	player_updateCameara(g.me, Vector3Lerp(g.me->previous_position, g.me->position, alpha));
+	player_updateCameara(g.me, Vector3Lerp(g.me->previous_position, g.me->position, alpha), world);
 	BeginMode3D(g.me->camera);
 	DrawPlane((Vector3){0, -0.01, 0}, (Vector2){50, 50}, ColorFromHSV(200, 0.7f, 0.7f));
 
@@ -113,6 +118,7 @@ static void draw(float alpha) {
 		DrawCube(v, PLAYER_BODY_WIDTH, PLAYER_BODY_HEIGHT, PLAYER_BODY_WIDTH, p->team == 1 ? PINK : SKYBLUE);
 		v.y += PLAYER_HEAD_OFFSET;
 		DrawSphereWires(v, PLAYER_HEAD_RADIUS, 10, 10, p->team == 1 ? RED : BLUE);
+		DrawLine3D(p->camera.position, p->camera.target, GREEN);
 	}
 	EndMode3D();
 
@@ -125,15 +131,22 @@ static void draw(float alpha) {
 	DrawLine(window_width/2.0f, window_height/2.0f - 8*zm, window_width/2.0f, window_height/2.0f + 8*zm, WHITE);
 
 	// weapons
-	DrawRectangle(0, 0, 300*zm, 100*zm, GetColor(0xffffff2f));
-	DrawRectangle(4*zm, 2*zm, 292*zm, 96*zm, GetColor(0x000000af));
-	DrawText(weapon_name(g.me->weapons.left.base), 9*zm, 7*zm, 24*g.zoom, WHITE);
-	DrawRectangle(0, 100*zm, 300*zm, 100*zm, GetColor(0xffffff2f));
-	DrawRectangle(4*zm, 102*zm, 292*zm, 96*zm, GetColor(0x000000af));
-	DrawText(weapon_name(g.me->weapons.right.base), 9*zm, 107*zm, 24*g.zoom, WHITE);
-	DrawRectangle(0, 200*zm, 200*zm, 100*zm, GetColor(0xffffff2f));
-	DrawRectangle(4*zm, 202*zm, 192*zm, 96*zm, GetColor(0x000000af));
-	DrawText(weapon_name(g.me->weapons.hand.base), 9*zm, 207*zm, 24*g.zoom, WHITE);
+	DrawRectangleLinesEx((Rectangle){0, 0, 300*zm, 100*zm}, 4*zm, GetColor(0xffffff2f));
+	DrawRectangle(4*zm, 4*zm, 292*zm, 92*zm, GetColor(0x000000af));
+	DrawText(weapon_name(g.me->weapons.left.base), 10*zm, 10*zm, 24*g.zoom, WHITE);
+	DrawRectangleLinesEx((Rectangle){0, 96*zm, 300*zm, 100*zm}, 4*zm, GetColor(0xffffff2f));
+	DrawRectangle(4*zm, 100*zm, 292*zm, 92*zm, GetColor(0x000000af));
+	DrawText(weapon_name(g.me->weapons.right.base), 10*zm, 106*zm, 24*g.zoom, WHITE);
+	DrawRectangleLinesEx((Rectangle){0, 192*zm, 200*zm, 100*zm}, 4*zm, GetColor(0xffffff2f));
+	DrawRectangle(4*zm, 196*zm, 192*zm, 92*zm, GetColor(0x000000af));
+	DrawText(weapon_name(g.me->weapons.hand.base), 10*zm, 202*zm, 24*g.zoom, WHITE);
+	if (g.me->holding == &g.me->weapons.left) {
+		DrawRectangleLinesEx((Rectangle){0, 0, 300*zm, 100*zm}, 4*zm, YELLOW);
+	} else if (g.me->holding == &g.me->weapons.right) {
+		DrawRectangleLinesEx((Rectangle){0, 96*zm, 300*zm, 100*zm}, 4*zm, YELLOW);
+	} else if (g.me->holding == &g.me->weapons.hand) {
+		DrawRectangleLinesEx((Rectangle){0, 192*zm, 200*zm, 100*zm}, 4*zm, YELLOW);
+	}
 
 	// health
 	float x = 20*zm;
@@ -171,9 +184,17 @@ void game_loop(int world_index, int max_players) {
 	// should be rewrite to support multi-player in the future!
 	g.me = &g.players[0];
 	for (int i = 0; i < max_players; i++) {
-		g.players[i].id = i + 1;
-		g.players[i].team = i < (max_players+1)/2 ? 1 : 2;
-		player_init(&g.players[i]);
+		Player *p = &g.players[i];
+		p->id = i + 1;
+		p->team = i < (max_players+1)/2 ? 1 : 2;
+		player_init(p);
+		if (p->team == 1) {
+			p->position = (Vector3){p->id*2 - 8, 0.5f, -19};
+			p->rotation.yaw = +PI/2;
+		} else {
+			p->position = (Vector3){(p->id - 4)*2 - 4, 0.5f, 19};
+			p->rotation.yaw = -PI/2;
+		}
 	}
 
 	DisableCursor();

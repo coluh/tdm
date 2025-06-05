@@ -7,6 +7,7 @@
 #include "types.h"
 #include "weapon.h"
 #include "event.h"
+#include "world.h"
 
 extern Game g;
 
@@ -17,14 +18,11 @@ void player_init(Player *p) {
 	}
 
 	p->position = (Vector3) {p->id*2 - 10, 0.5f, p->team == 1 ? -19 : 19};
+	p->rotation.pitch = 0.0f;
 
-	p->camera.position = (Vector3) {p->id*2 - 10, 2.2f, p->team == 1 ? -19 : 19};
-	p->camera.target = (Vector3) {0.0f, 2.0f, 0.0f};
 	p->camera.up = (Vector3) {0, 1, 0};
 	p->camera.fovy = 90;
 	p->camera.projection = CAMERA_PERSPECTIVE;
-	player_updateCameara(p, p->position);
-	p->camera.target = (Vector3) {0.0f, 2.0f, 0.0f};
 
 	p->health = PLAYER_FULL_HEALTH;
 	p->weapons.left.base = Weapon_M762;
@@ -85,7 +83,6 @@ void player_fire(Player *self) {
 			RayCollision info_head = GetRayCollisionSphere(bullet, head.center, head.radius);
 			RayCollision info_body = GetRayCollisionBox(bullet, body);
 			if (info_head.hit || info_body.hit) {
-				TraceLog(LOG_INFO, "player %d shoot player %d!", self->id, p->id);
 				p->health -= 4.0f;
 				if (p->health <= 0) {
 					event_dispatch(&(Event){
@@ -98,7 +95,7 @@ void player_fire(Player *self) {
 	}
 }
 
-void player_update(Player *p) {
+void player_update(Player *p, World *w) {
 	p->previous_position = p->position;
 
 	Vector3 input_dir = {p->input.right - p->input.left, 0, p->input.forward - p->input.back};
@@ -123,28 +120,48 @@ void player_update(Player *p) {
 	}
 
 	move_slide(p);
+	player_updateCameara(p, p->position, w);
 
 	memset(&p->input, 0, sizeof(struct PlayerInput));
 }
 
-void player_updateCameara(Player *player, Vector3 position) {
+void player_updateCameara(Player *player, Vector3 position, const World *world) {
 	Camera *cam = &player->camera;
 
 	Vector3 p = position;
 	Vector3 eye_offset = {0, PLAYER_BODY_HEIGHT/2 + PLAYER_HEAD_OFFSET, 0};
-	Vector3 forward = GetCameraForward(cam);
-	Vector3 right = GetCameraRight(cam);
-	Vector3 up = GetCameraUp(cam);
+	p = Vector3Add(p, eye_offset);
+
+	Vector3 forward = (Vector3){cosf(player->rotation.yaw), 0.0f, sinf(player->rotation.yaw)};
+	Vector3 up = (Vector3){0, 1, 0};
+	Vector3 right = Vector3CrossProduct(forward, up);
+	forward = Vector3RotateByAxisAngle(forward, right, player->rotation.pitch);
+
+	cam->target = Vector3Add(p, Vector3Scale(right, 0.4f));
+
 	forward = Vector3Scale(forward, -1.0f);
 	right = Vector3Scale(right, 0.5f);
 	up = Vector3Scale(up, 0.5f);
-	p = Vector3Add(p, eye_offset);
+
 	p = Vector3Add(p, forward);
 	p = Vector3Add(p, right);
 	p = Vector3Add(p, up);
 
-	Vector3 dp = Vector3Subtract(p, cam->position);
+	cam->position = cam->target;
 
-	cam->position = Vector3Add(cam->position, dp);
-	cam->target = Vector3Add(cam->target, dp);
+	Vector3 eye = Vector3Subtract(p, cam->target);
+	eye = Vector3Normalize(eye);
+	eye = Vector3Scale(eye, 0.1f);
+	cam->position = Vector3Add(cam->position, eye);
+	cam->position = Vector3Add(cam->position, eye);
+
+	float d = 2.5f;
+	while (!world_overlapPoint(world, cam->position)) {
+		cam->position = Vector3Add(cam->position, eye);
+		d -= 0.1f;
+		if (d <= 0) {
+			break;
+		}
+	}
+	cam->position = Vector3Subtract(cam->position, eye);
 }

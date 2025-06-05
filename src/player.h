@@ -21,6 +21,9 @@
 typedef struct Player {
 	int id;
 	int team;
+	struct {
+		float yaw, pitch;
+	} rotation;
 	Vector3 position; // bottom center
 	Vector3 velocity;
 	Vector3 previous_position; // for render alpha
@@ -51,11 +54,12 @@ typedef struct Player {
 		int assist;
 	} record;
 } Player;
+typedef struct World World;
 
 void player_init(Player *player);
-void player_update(Player *player);
+void player_update(Player *player, World *world);
 
-void player_updateCameara(Player *p, Vector3 position);
+void player_updateCameara(Player *player, Vector3 position, const World *world);
 void player_getBody(Player *p, BoundingBall *head, BoundingBox *body);
 
 #endif
