@@ -1,6 +1,7 @@
 #include "game.h"
 #include "config.h"
 #include "particle.h"
+#include "types.h"
 #include "utils.h"
 #include "weapon.h"
 #include "world.h"
@@ -106,7 +107,8 @@ static void draw(float alpha) {
 	// 3D content
 	player_updateCameara(g.me, Vector3Lerp(g.me->previous_position, g.me->position, alpha), world);
 	BeginMode3D(g.me->camera);
-	DrawPlane((Vector3){0, -0.01, 0}, (Vector2){50, 50}, ColorFromHSV(200, 0.7f, 0.7f));
+	// DrawPlane((Vector3){0, -0.01, 0}, (Vector2){50, 50}, ColorFromHSV(200, 0.7f, 0.7f));
+	DrawPlane((Vector3){0, -0.01, 0}, (Vector2){50, 50}, GRAY);
 
 	// world boxes, ramps, balls
 	for (int i = 0; i < world->box_count; i++) {
@@ -125,18 +127,21 @@ static void draw(float alpha) {
 	// players
 	for (int i = 0; i < g.max_players; i++) {
 		const Player *p = &g.players[i];
-		Vector3 v = Vector3Lerp(p->previous_position, p->position, alpha); // bottom center
+		Vector3 pos = Vector3Lerp(p->previous_position, p->position, alpha); // bottom center
+		BoundingBall head;
+		BoundingBox body;
+		player_getBody(p, &head, &body, &pos);
 		if (!p->dead) {
-			v.y += PLAYER_BODY_HEIGHT/2;
-			DrawCube(v, PLAYER_BODY_WIDTH, PLAYER_BODY_HEIGHT, PLAYER_BODY_WIDTH, p->team == 1 ? PINK : SKYBLUE);
-			v.y += PLAYER_HEAD_OFFSET;
-			DrawSphereWires(v, PLAYER_HEAD_RADIUS, 10, 10, p->team == 1 ? RED : BLUE);
+			Vector3 center = Vector3Lerp(body.min, body.max, 0.5f);
+			Vector3 size = Vector3Subtract(body.max, body.min);
+			DrawCubeV(center, size, p->team == 1 ? PINK : SKYBLUE);
+			DrawSphere(head.center, head.radius, p->team == 1 ? PINK : SKYBLUE);
 			DrawLine3D(p->camera.position, p->camera.target, GREEN);
 		} else {
-			v.y += PLAYER_BODY_WIDTH/2;
-			DrawCube(v, PLAYER_BODY_HEIGHT, PLAYER_BODY_WIDTH, PLAYER_BODY_WIDTH, p->team == 1 ? PINK : SKYBLUE);
-			v.x += PLAYER_HEAD_OFFSET;
-			DrawSphereWires(v, PLAYER_HEAD_RADIUS, 10, 10, p->team == 1 ? RED : BLUE);
+			pos.y += PLAYER_BODY_WIDTH/2;
+			DrawCube(pos, PLAYER_BODY_HEIGHT, PLAYER_BODY_WIDTH, PLAYER_BODY_WIDTH, p->team == 1 ? RED : BLUE);
+			pos.x += PLAYER_BODY_HEIGHT/2 + PLAYER_HEAD_OFFSET;
+			DrawSphere(pos, PLAYER_HEAD_RADIUS, p->team == 1 ? RED : BLUE);
 		}
 	}
 
@@ -191,7 +196,6 @@ static void draw(float alpha) {
 
 	y -= 48*zm;
 	snprintf(buf, 4, "%d", GetFPS());
-	DrawRectangle(x, y, 48*zm, 24*zm, BLACK);
 	DrawText(buf, x, y, 24*zm, WHITE);
 }
 
@@ -216,10 +220,10 @@ void game_loop(int world_index, int max_players) {
 		p->team = i < (max_players+1)/2 ? 1 : 2;
 		player_init(p);
 		if (p->team == 1) {
-			p->position = (Vector3){p->id*2 - 8, 0.5f, -19};
+			p->position = (Vector3){p->id*2 - 8, 2.5f, -19};
 			p->rotation.yaw = +PI/2;
 		} else {
-			p->position = (Vector3){(p->id - 4)*2 - 4, 0.5f, 19};
+			p->position = (Vector3){(p->id - 4)*2 - 4, 2.5f, 19};
 			p->rotation.yaw = -PI/2;
 		}
 	}

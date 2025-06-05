@@ -19,6 +19,12 @@ void DrawRamp(BoundingRamp *ramp, Color color) {
 		DrawTriangle3D((Vector3){min.x, max.y, min.z}, (Vector3){min.x, max.y, max.z}, (Vector3){max.x, min.y, max.z}, color);
 		break;
 	case Direction_ZP:
+		DrawTriangle3D((Vector3){min.x, min.y, min.z}, (Vector3){min.x, max.y, min.z}, (Vector3){max.x, max.y, min.z}, color);
+		DrawTriangle3D((Vector3){min.x, min.y, min.z}, (Vector3){max.x, max.y, min.z}, (Vector3){max.x, min.y, min.z}, color);
+		DrawTriangle3D((Vector3){min.x, min.y, min.z}, (Vector3){min.x, min.y, max.z}, (Vector3){min.x, max.y, min.z}, color);
+		DrawTriangle3D((Vector3){max.x, min.y, min.z}, (Vector3){max.x, max.y, min.z}, (Vector3){max.x, min.y, max.z}, color);
+		DrawTriangle3D((Vector3){min.x, max.y, min.z}, (Vector3){min.x, min.y, max.z}, (Vector3){max.x, min.y, max.z}, color);
+		DrawTriangle3D((Vector3){min.x, max.y, min.z}, (Vector3){max.x, min.y, max.z}, (Vector3){max.x, max.y, min.z}, color);
 		break;
 	case Direction_XN:
 		DrawTriangle3D((Vector3){max.x, min.y, min.z}, (Vector3){max.x, max.y, min.z}, (Vector3){max.x, max.y, max.z}, color);

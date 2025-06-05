@@ -11,8 +11,8 @@
 #define PLAYER_BODY_HEIGHT 1.4f
 // player body height when squating
 #define PLAYER_BODY_CROUCH_HEIGHT 0.8f
-// player body center to head center distance
-#define PLAYER_HEAD_OFFSET 1.0f
+// player body top to head center distance
+#define PLAYER_HEAD_OFFSET 0.3f
 // player head radius
 #define PLAYER_HEAD_RADIUS 0.25f
 
@@ -62,6 +62,6 @@ void player_init(Player *player);
 void player_update(Player *player, World *world);
 
 void player_updateCameara(Player *player, Vector3 position, const World *world);
-void player_getBody(Player *p, BoundingBall *head, BoundingBox *body);
+void player_getBody(const Player *player, BoundingBall *head, BoundingBox *body, const Vector3 *pos);
 
 #endif

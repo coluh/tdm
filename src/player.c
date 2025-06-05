@@ -45,22 +45,25 @@ static void move_slide(Player *p) {
 	}
 }
 
-void player_getBody(Player *p, BoundingBall *head, BoundingBox *body) {
+void player_getBody(const Player *player, BoundingBall *head, BoundingBox *body, const Vector3 *pos) {
+	const Vector3 *p = pos ? pos : &player->position;
+	float bh = player->crouching ? PLAYER_BODY_CROUCH_HEIGHT : PLAYER_BODY_HEIGHT;
 	head->center = (Vector3){
-		p->position.x,
-		p->position.y + PLAYER_BODY_HEIGHT/2 + PLAYER_HEAD_OFFSET,
-		p->position.z,
+		p->x,
+		p->y + bh + PLAYER_HEAD_OFFSET,
+		p->z,
 	};
 	head->radius = PLAYER_HEAD_RADIUS;
+
 	body->min = (Vector3){
-		p->position.x - PLAYER_BODY_WIDTH/2,
-		p->position.y,
-		p->position.z - PLAYER_BODY_WIDTH/2,
+		p->x - PLAYER_BODY_WIDTH/2,
+		p->y,
+		p->z - PLAYER_BODY_WIDTH/2,
 	};
 	body->max = (Vector3){
-		p->position.x + PLAYER_BODY_WIDTH/2,
-		p->position.y + PLAYER_BODY_HEIGHT,
-		p->position.z + PLAYER_BODY_WIDTH/2,
+		p->x + PLAYER_BODY_WIDTH/2,
+		p->y + bh,
+		p->z + PLAYER_BODY_WIDTH/2,
 	};
 }
 
@@ -80,7 +83,7 @@ void player_fire(Player *self) {
 		if (p->team != self->team && !p->dead) {
 			BoundingBall head;
 			BoundingBox body;
-			player_getBody(p, &head, &body);
+			player_getBody(p, &head, &body, NULL);
 			RayCollision info_head = GetRayCollisionSphere(bullet, head.center, head.radius);
 			RayCollision info_body = GetRayCollisionBox(bullet, body);
 			if (info_head.hit || info_body.hit) {
@@ -138,6 +141,12 @@ void player_update(Player *p, World *w) {
 	if (p->input.fire) {
 		player_fire(p);
 	}
+	if (p->input.crouch) {
+		p->crouching = !p->crouching;
+	}
+	if (p->input.lie) {
+		p->lying = !p->lying;
+	}
 
 	move_slide(p);
 	player_updateCameara(p, p->position, w);
@@ -149,7 +158,7 @@ void player_updateCameara(Player *player, Vector3 position, const World *world) 
 	Camera *cam = &player->camera;
 
 	Vector3 p = position;
-	Vector3 eye_offset = {0, PLAYER_BODY_HEIGHT/2 + PLAYER_HEAD_OFFSET, 0};
+	Vector3 eye_offset = {0, PLAYER_BODY_HEIGHT + PLAYER_HEAD_OFFSET, 0};
 	p = Vector3Add(p, eye_offset);
 
 	Vector3 forward = (Vector3){cosf(player->rotation.yaw), 0.0f, sinf(player->rotation.yaw)};
