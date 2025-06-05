@@ -4,6 +4,7 @@
 #include <rcamera.h>
 #include <string.h>
 #include "game.h"
+#include "particle.h"
 #include "types.h"
 #include "weapon.h"
 #include "event.h"
@@ -76,20 +77,30 @@ void player_fire(Player *self) {
 	for (int i = 0; i < g.max_players; i++) {
 		Player *p = &g.players[i];
 		if (p->id == 0) continue; // player not exists
-		if (p->team != self->team) {
+		if (p->team != self->team && !p->dead) {
 			BoundingBall head;
 			BoundingBox body;
 			player_getBody(p, &head, &body);
 			RayCollision info_head = GetRayCollisionSphere(bullet, head.center, head.radius);
 			RayCollision info_body = GetRayCollisionBox(bullet, body);
 			if (info_head.hit || info_body.hit) {
-				p->health -= 4.0f;
+				float hurt = 0.48f;
+				if (info_head.hit) {
+					hurt *= 2.0f;
+				}
+				p->health -= hurt;
 				if (p->health <= 0) {
 					event_dispatch(&(Event){
 						.type = Event_KILL,
 						.kill = { self->id, p->id },
 					});
 				}
+				Vector3 point = info_head.hit ? info_head.point : info_body.point;
+				particle_spawn(point, GREEN);
+				particle_spawn(point, GREEN);
+				particle_spawn(point, GREEN);
+				particle_spawn(point, GREEN);
+				particle_spawn(point, GREEN);
 			}
 		}
 	}
@@ -97,6 +108,15 @@ void player_fire(Player *self) {
 
 void player_update(Player *p, World *w) {
 	p->previous_position = p->position;
+
+	if (p->dead) {
+		p->reborn_timer -= g.delta;
+		if (p->reborn_timer <= 0) {
+			p->dead = false;
+			p->health = PLAYER_FULL_HEALTH;
+		}
+		return;
+	}
 
 	Vector3 input_dir = {p->input.right - p->input.left, 0, p->input.forward - p->input.back};
 	Vector3 right = GetCameraRight(&p->camera);

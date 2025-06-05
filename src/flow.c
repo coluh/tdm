@@ -4,6 +4,7 @@
 #include "player.h"
 
 #include <raylib.h>
+#include <raymath.h>
 
 extern Game g;
 
@@ -15,7 +16,8 @@ void on_killed(Event *ev) {
 	dead->record.death++;
 
 	// reborn
-	dead->health = PLAYER_FULL_HEALTH;
+	dead->dead = true;
+	dead->reborn_timer = 3.0f;
 }
 
 void flow_init() {

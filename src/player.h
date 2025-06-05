@@ -37,6 +37,8 @@ typedef struct Player {
 	Camera camera;
 
 	float health;
+	bool dead;
+	float reborn_timer;
 	bool crouching;
 	bool lying;
 	struct {

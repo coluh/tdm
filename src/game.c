@@ -1,5 +1,6 @@
 #include "game.h"
 #include "config.h"
+#include "particle.h"
 #include "utils.h"
 #include "weapon.h"
 #include "world.h"
@@ -63,12 +64,22 @@ static void input() {
 	if (IsKeyPressed(KEY_SPACE)) p->input.jump = true;
 	if (IsKeyPressed(KEY_LEFT_SHIFT)) p->input.crouch = true;
 	if (IsKeyPressed(KEY_LEFT_CONTROL)) p->input.lie = true;
-	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) p->input.fire = true;
-	if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) p->input.scope = true;
+	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) p->input.fire = true;
+	if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) p->input.scope = true;
 
 	if (IsKeyPressed(KEY_ONE)) p->holding = &p->weapons.left;
 	if (IsKeyPressed(KEY_TWO)) p->holding = &p->weapons.right;
 	if (IsKeyPressed(KEY_THREE)) p->holding = &p->weapons.hand;
+
+	// debug
+	if (IsKeyPressed(KEY_U)) {
+		for (int i = 0; i < g.max_players; i++) {
+			Player *e = &g.players[i];
+			if (e->id != 0 && e->team != p->team) {
+				p->position = Vector3Add(e->position, (Vector3){0, 0, -1});
+			}
+		}
+	}
 }
 
 static void update() {
@@ -78,6 +89,7 @@ static void update() {
 		}
 		player_update(&g.players[i], g.world);
 	}
+	particle_update();
 }
 
 static float hashV(Vector3 v) {
@@ -114,12 +126,22 @@ static void draw(float alpha) {
 	for (int i = 0; i < g.max_players; i++) {
 		const Player *p = &g.players[i];
 		Vector3 v = Vector3Lerp(p->previous_position, p->position, alpha); // bottom center
-		v.y += PLAYER_BODY_HEIGHT/2;
-		DrawCube(v, PLAYER_BODY_WIDTH, PLAYER_BODY_HEIGHT, PLAYER_BODY_WIDTH, p->team == 1 ? PINK : SKYBLUE);
-		v.y += PLAYER_HEAD_OFFSET;
-		DrawSphereWires(v, PLAYER_HEAD_RADIUS, 10, 10, p->team == 1 ? RED : BLUE);
-		DrawLine3D(p->camera.position, p->camera.target, GREEN);
+		if (!p->dead) {
+			v.y += PLAYER_BODY_HEIGHT/2;
+			DrawCube(v, PLAYER_BODY_WIDTH, PLAYER_BODY_HEIGHT, PLAYER_BODY_WIDTH, p->team == 1 ? PINK : SKYBLUE);
+			v.y += PLAYER_HEAD_OFFSET;
+			DrawSphereWires(v, PLAYER_HEAD_RADIUS, 10, 10, p->team == 1 ? RED : BLUE);
+			DrawLine3D(p->camera.position, p->camera.target, GREEN);
+		} else {
+			v.y += PLAYER_BODY_WIDTH/2;
+			DrawCube(v, PLAYER_BODY_HEIGHT, PLAYER_BODY_WIDTH, PLAYER_BODY_WIDTH, p->team == 1 ? PINK : SKYBLUE);
+			v.x += PLAYER_HEAD_OFFSET;
+			DrawSphereWires(v, PLAYER_HEAD_RADIUS, 10, 10, p->team == 1 ? RED : BLUE);
+		}
 	}
+
+	particle_render(g.me->camera, alpha);
+
 	EndMode3D();
 
 	// 2D content
@@ -166,6 +188,11 @@ static void draw(float alpha) {
 	char buf[16];
 	snprintf(buf, 16, "%d / %d / %d", g.me->record.kill, g.me->record.death, g.me->record.assist);
 	DrawText(buf, x, y, 24*g.zoom, WHITE);
+
+	y -= 48*zm;
+	snprintf(buf, 4, "%d", GetFPS());
+	DrawRectangle(x, y, 48*zm, 24*zm, BLACK);
+	DrawText(buf, x, y, 24*zm, WHITE);
 }
 
 void game_loop(int world_index, int max_players) {
