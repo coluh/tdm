@@ -41,6 +41,7 @@ typedef struct Player {
 	float reborn_timer;
 	bool crouching;
 	bool lying;
+	bool scoping;
 	struct {
 		Weapon left;
 		Weapon right;

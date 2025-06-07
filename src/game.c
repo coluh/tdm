@@ -154,8 +154,6 @@ static void draw(float alpha) {
 
 	const int window_width = GetScreenWidth();
 	const int window_height = GetScreenHeight();
-	DrawLine(window_width/2.0f - 8*zm, window_height/2.0f, window_width/2.0f + 8*zm, window_height/2.0f, WHITE);
-	DrawLine(window_width/2.0f, window_height/2.0f - 8*zm, window_width/2.0f, window_height/2.0f + 8*zm, WHITE);
 
 	// weapons
 	DrawRectangleLinesEx((Rectangle){0, 0, 300*zm, 100*zm}, 4*zm, GetColor(0xffffff2f));
@@ -193,6 +191,16 @@ static void draw(float alpha) {
 	char buf[16];
 	snprintf(buf, 16, "%d / %d / %d", g.me->record.kill, g.me->record.death, g.me->record.assist);
 	DrawText(buf, x, y, 24*g.zoom, WHITE);
+
+	// scope
+	if (g.me->scoping) {
+		DrawCircle(window_width/2, window_height/2, 2*zm, RED);
+		DrawRing((Vector2){window_width/2.0f, window_height/2.0f}, 470*zm, 520*zm, 0, 360, 50, BLACK);
+		DrawRing((Vector2){window_width/2.0f, window_height/2.0f}, 450*zm, 470*zm, 0, 360, 50, DARKGRAY);
+	} else {
+		DrawLine(window_width/2.0f - 8*zm, window_height/2.0f, window_width/2.0f + 8*zm, window_height/2.0f, WHITE);
+		DrawLine(window_width/2.0f, window_height/2.0f - 8*zm, window_width/2.0f, window_height/2.0f + 8*zm, WHITE);
+	}
 
 	y -= 48*zm;
 	snprintf(buf, 4, "%d", GetFPS());

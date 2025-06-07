@@ -147,6 +147,7 @@ void player_update(Player *p, World *w) {
 	if (p->input.lie) {
 		p->lying = !p->lying;
 	}
+	p->scoping = p->input.scope;
 
 	move_slide(p);
 	player_updateCameara(p, p->position, w);
@@ -183,6 +184,10 @@ void player_updateCameara(Player *player, Vector3 position, const World *world) 
 	eye = Vector3Scale(eye, 0.1f);
 	cam->position = Vector3Add(cam->position, eye);
 	cam->position = Vector3Add(cam->position, eye);
+
+	if (player->scoping) {
+		return;
+	}
 
 	float d = 2.5f;
 	while (!world_overlapPoint(world, cam->position)) {
