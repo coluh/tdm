@@ -69,6 +69,13 @@ void player_fire(Player *self) {
 		dir,
 	};
 
+	if (!self->crouching) {
+		self->rotation.pitch += GetRandomValue(5, 12)*2*PI/360/10;
+	} else {
+		self->rotation.pitch += GetRandomValue(4, 8)*2*PI/360/10;
+	}
+	self->rotation.yaw += GetRandomValue(-2, 2)*2*PI/360/10;
+
 	// RayCollision nearest_collide;
 	// Deleted! because I want more birds in one row!
 	for (int i = 0; i < g.max_players; i++) {
@@ -147,7 +154,7 @@ void player_update(Player *p, World *w) {
 	p->scoping = p->input.scope;
 
 	player_move_slide(p, w);
-	player_updateCameara(p, p->position, w);
+	// player_updateCameara(p, p->position, w);
 
 	memset(&p->input, 0, sizeof(struct PlayerInput));
 }
@@ -155,8 +162,17 @@ void player_update(Player *p, World *w) {
 void player_updateCameara(Player *player, Vector3 position, const World *world) {
 	Camera *cam = &player->camera;
 
+	cam->position = Vector3Lerp(cam->position, player->target.camera_position, 0.3f);
+	cam->target = Vector3Lerp(cam->target, player->target.camera_target, 0.3f);
+
+	Vector3 c_target;
+	Vector3 c_position;
+
 	Vector3 p = position;
 	Vector3 eye_offset = {0, PLAYER_BODY_HEIGHT + PLAYER_HEAD_OFFSET, 0};
+	if (player->crouching) {
+		eye_offset.y = PLAYER_BODY_CROUCH_HEIGHT + PLAYER_HEAD_OFFSET;
+	}
 	p = Vector3Add(p, eye_offset);
 
 	Vector3 forward = (Vector3){cosf(player->rotation.yaw), 0.0f, sinf(player->rotation.yaw)};
@@ -164,7 +180,7 @@ void player_updateCameara(Player *player, Vector3 position, const World *world) 
 	Vector3 right = Vector3CrossProduct(forward, up);
 	forward = Vector3RotateByAxisAngle(forward, right, player->rotation.pitch);
 
-	cam->target = Vector3Add(p, Vector3Scale(right, 0.4f));
+	c_target = Vector3Add(p, Vector3Scale(right, 0.4f));
 
 	forward = Vector3Scale(forward, -1.0f);
 	right = Vector3Scale(right, 0.5f);
@@ -174,25 +190,32 @@ void player_updateCameara(Player *player, Vector3 position, const World *world) 
 	p = Vector3Add(p, right);
 	p = Vector3Add(p, up);
 
-	cam->position = cam->target;
+	c_position = c_target;
 
-	Vector3 eye = Vector3Subtract(p, cam->target);
+	Vector3 eye = Vector3Subtract(p, c_target);
 	eye = Vector3Normalize(eye);
 	eye = Vector3Scale(eye, 0.1f);
-	cam->position = Vector3Add(cam->position, eye);
-	cam->position = Vector3Add(cam->position, eye);
+	c_position = Vector3Add(c_position, eye);
+	c_position = Vector3Add(c_position, eye);
 
 	if (player->scoping) {
+		player->target.camera_position = c_position;
+		player->target.camera_target = c_target;
 		return;
 	}
 
 	float d = 2.5f;
-	while (!world_overlapPoint(world, cam->position)) {
-		cam->position = Vector3Add(cam->position, eye);
+	while (!world_overlapPoint(world, c_position)) {
+		c_position = Vector3Add(c_position, eye);
 		d -= 0.1f;
 		if (d <= 0) {
 			break;
 		}
 	}
-	cam->position = Vector3Subtract(cam->position, eye);
+	c_position = Vector3Subtract(c_position, eye);
+
+	player->target.camera_position = c_position;
+	player->target.camera_target = c_target;
+	// cam->target = player->target.camera_target;
+	// cam->position = player->target.camera_position;
 }

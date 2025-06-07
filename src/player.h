@@ -35,6 +35,10 @@ typedef struct Player {
 		bool fire;
 	} input;
 	Camera camera;
+	struct {
+		Vector3 camera_position;
+		Vector3 camera_target;
+	} target;
 
 	float health;
 	bool dead;

@@ -54,7 +54,7 @@ static void input() {
 	const Vector2 mouseDelta = GetMouseDelta();
 	p->rotation.yaw += mouseDelta.x*da;
 	p->rotation.pitch -= mouseDelta.y*da;
-	p->rotation.pitch = Wrap(p->rotation.pitch, -89.0f, +89.0f);
+	p->rotation.pitch = Clamp(p->rotation.pitch, -PI/2, +PI/2);
 
 	// TODO: config keydown and hold
         if (IsKeyDown(KEY_W)) p->input.forward = 1;
