@@ -33,38 +33,32 @@ void player_init(Player *p) {
 	p->has_stun_grenade = true;
 }
 
-static void move_slide(Player *p) {
-	p->velocity.y += -30 * g.delta;
-
-	p->position.x += p->velocity.x * g.delta;
-	p->position.y += p->velocity.y * g.delta;
-	p->position.z += p->velocity.z * g.delta;
-	if (p->position.y < 0.01) {
-		p->position.y = 0.01;
-		p->velocity.y = 0;
-	}
-}
-
 void player_getBody(const Player *player, BoundingBall *head, BoundingBox *body, const Vector3 *pos) {
 	const Vector3 *p = pos ? pos : &player->position;
 	float bh = player->crouching ? PLAYER_BODY_CROUCH_HEIGHT : PLAYER_BODY_HEIGHT;
-	head->center = (Vector3){
-		p->x,
-		p->y + bh + PLAYER_HEAD_OFFSET,
-		p->z,
-	};
-	head->radius = PLAYER_HEAD_RADIUS;
 
-	body->min = (Vector3){
-		p->x - PLAYER_BODY_WIDTH/2,
-		p->y,
-		p->z - PLAYER_BODY_WIDTH/2,
-	};
-	body->max = (Vector3){
-		p->x + PLAYER_BODY_WIDTH/2,
-		p->y + bh,
-		p->z + PLAYER_BODY_WIDTH/2,
-	};
+	if (head) {
+		head->center = (Vector3){
+			p->x,
+				p->y + bh + PLAYER_HEAD_OFFSET,
+				p->z,
+		};
+		head->radius = PLAYER_HEAD_RADIUS;
+	}
+
+	if (body) {
+		body->min = (Vector3){
+			p->x - PLAYER_BODY_WIDTH/2,
+				p->y,
+				p->z - PLAYER_BODY_WIDTH/2,
+		};
+		body->max = (Vector3){
+			p->x + PLAYER_BODY_WIDTH/2,
+				p->y + bh,
+				p->z + PLAYER_BODY_WIDTH/2,
+		};
+	}
+
 }
 
 void player_fire(Player *self) {
@@ -136,7 +130,10 @@ void player_update(Player *p, World *w) {
 	p->velocity.x = v.x;
 	p->velocity.z = v.z;
 	if (p->input.jump) {
-		p->velocity.y = 10.0f;
+		if (p->on_ground) {
+			p->velocity.y = 12.0f;
+			p->on_ground = false;
+		}
 	}
 	if (p->input.fire) {
 		player_fire(p);
@@ -149,7 +146,7 @@ void player_update(Player *p, World *w) {
 	}
 	p->scoping = p->input.scope;
 
-	move_slide(p);
+	player_move_slide(p, w);
 	player_updateCameara(p, p->position, w);
 
 	memset(&p->input, 0, sizeof(struct PlayerInput));

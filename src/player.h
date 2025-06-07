@@ -39,6 +39,7 @@ typedef struct Player {
 	float health;
 	bool dead;
 	float reborn_timer;
+	bool on_ground;
 	bool crouching;
 	bool lying;
 	bool scoping;
@@ -64,5 +65,7 @@ void player_update(Player *player, World *world);
 
 void player_updateCameara(Player *player, Vector3 position, const World *world);
 void player_getBody(const Player *player, BoundingBall *head, BoundingBox *body, const Vector3 *pos);
+
+void player_move_slide(Player *p, World *w);
 
 #endif

@@ -62,7 +62,7 @@ static void input() {
         if (IsKeyDown(KEY_A)) p->input.left = 1;
         if (IsKeyDown(KEY_D)) p->input.right = 1;
 
-	if (IsKeyPressed(KEY_SPACE)) p->input.jump = true;
+	if (IsKeyDown(KEY_SPACE)) p->input.jump = true;
 	if (IsKeyPressed(KEY_LEFT_SHIFT)) p->input.crouch = true;
 	if (IsKeyPressed(KEY_LEFT_CONTROL)) p->input.lie = true;
 	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) p->input.fire = true;
@@ -107,8 +107,6 @@ static void draw(float alpha) {
 	// 3D content
 	player_updateCameara(g.me, Vector3Lerp(g.me->previous_position, g.me->position, alpha), world);
 	BeginMode3D(g.me->camera);
-	// DrawPlane((Vector3){0, -0.01, 0}, (Vector2){50, 50}, ColorFromHSV(200, 0.7f, 0.7f));
-	DrawPlane((Vector3){0, -0.01, 0}, (Vector2){50, 50}, GRAY);
 
 	// world boxes, ramps, balls
 	for (int i = 0; i < world->box_count; i++) {
